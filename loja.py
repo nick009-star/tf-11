@@ -2,9 +2,6 @@
 # Object Calisthenics. A missao e consertar SEM mudar o que ele imprime.
 # Rodar no terminal: python3 loja_feia.py
 
-pedidos = []
-
-
 class Cpf:
     def __init__(self, valor):
         if len(valor) != 11:
@@ -91,11 +88,31 @@ class ItemDoPedido:
         return self.produto.calcular_valor(self.quantidade)
 
 
-class Pedido:
-    def __init__(self, numero, cliente):
-        self.numero = numero
-        self.cliente = cliente
+class ItensDoPedido:
+    def __init__(self):
         self.itens = []
+
+    def adicionar(self, item):
+        self.itens.append(item)
+
+    def esta_vazia(self):
+        return len(self.itens) == 0
+
+    def calcular_total(self):
+        total = Dinheiro(0)
+        for item in self.itens:
+            total = total.somar(item.calcular_total())
+        return total
+
+    def imprimir(self):
+        for item in self.itens:
+            print("  ", item.quantidade, "x", item.produto.nome, "=", item.calcular_total())
+
+
+class Pedido:
+    def __init__(self, cliente):
+        self.cliente = cliente
+        self.itens = ItensDoPedido()
         self.status = Status("A")
 
     def get_status(self):
@@ -103,12 +120,6 @@ class Pedido:
 
     def set_status(self, valor):
         self.status = Status(valor)
-
-
-def novo_pedido(numero, cliente):
-    pedido = Pedido(numero, cliente)
-    pedidos.append(pedido)
-    return pedido
 
 
 def recusar_pedido(numero, email, cpf, cep):
@@ -120,15 +131,8 @@ def recusar_pedido(numero, email, cpf, cep):
         print("pedido", numero, "recusado:", erro)
 
 
-def adicionar_item(pedido, produto, quantidade):
-    pedido.itens.append(ItemDoPedido(produto, quantidade))
-
-
 def calcular_total(pedido):
-    total = Dinheiro(0)
-    for item in pedido.itens:
-        total = total.somar(item.calcular_total())
-    return total
+    return pedido.itens.calcular_total()
 
 
 def calcular_desconto(tipo, total):
@@ -147,7 +151,7 @@ def calcular_valor_a_pagar(pedido):
 
 def pagar(pedido):
     if pedido.get_status().esta_aberto():
-        if len(pedido.itens) > 0:
+        if not pedido.itens.esta_vazia():
             pedido.set_status("P")
             return True
         else:
@@ -168,66 +172,82 @@ def descrever_status(status):
     return status.descricao()
 
 
-def relatorio():
-    for pedido in pedidos:
-        print("Pedido", pedido.numero, "-", pedido.cliente.nome, "-", pedido.cliente.cidade)
-        print("  status:", descrever_status(pedido.get_status()))
-        for item in pedido.itens:
-            print("  ", item.quantidade, "x", item.produto.nome, "=", item.calcular_total())
-        if len(pedido.itens) > 0:
-            print("  total:", calcular_total(pedido), "| desconto:", calcular_desconto(pedido.cliente.tipo, calcular_total(pedido)), "| a pagar:", calcular_valor_a_pagar(pedido))
+class Pedidos:
+    def __init__(self):
+        self.pedidos = {}
 
+    def novo_pedido(self, numero, cliente):
+        pedido = Pedido(cliente)
+        self.pedidos[numero] = pedido
+        return pedido
 
-def arrecadado():
-    total_arrecadado = Dinheiro(0)
-    for pedido in pedidos:
-        if pedido.get_status().esta_pago():
-            total_arrecadado = total_arrecadado.somar(calcular_valor_a_pagar(pedido))
-    return total_arrecadado
+    def adicionar_item(self, numero, produto, quantidade):
+        self.pedidos[numero].itens.adicionar(ItemDoPedido(produto, quantidade))
 
+    def pagar(self, numero):
+        return pagar(self.pedidos[numero])
 
-def quantidade_de_pedidos_abertos():
-    quantidade = 0
-    for pedido in pedidos:
-        if pedido.get_status().esta_aberto():
-            quantidade = quantidade + 1
-    return quantidade
+    def cancelar(self, numero):
+        return cancelar(self.pedidos[numero])
+
+    def relatorio(self):
+        for numero, pedido in self.pedidos.items():
+            print("Pedido", numero, "-", pedido.cliente.nome, "-", pedido.cliente.cidade)
+            print("  status:", descrever_status(pedido.get_status()))
+            pedido.itens.imprimir()
+            if not pedido.itens.esta_vazia():
+                print("  total:", calcular_total(pedido), "| desconto:", calcular_desconto(pedido.cliente.tipo, calcular_total(pedido)), "| a pagar:", calcular_valor_a_pagar(pedido))
+
+    def arrecadado(self):
+        total_arrecadado = Dinheiro(0)
+        for pedido in self.pedidos.values():
+            if pedido.get_status().esta_pago():
+                total_arrecadado = total_arrecadado.somar(calcular_valor_a_pagar(pedido))
+        return total_arrecadado
+
+    def quantidade_de_pedidos_abertos(self):
+        quantidade = 0
+        for pedido in self.pedidos.values():
+            if pedido.get_status().esta_aberto():
+                quantidade = quantidade + 1
+        return quantidade
 
 
 # --- o roteiro da loja ---------------------------------------------------------
+pedidos = Pedidos()
 cliente_ana = Cliente("Ana Souza", "12345678901", "ana@mail.com", "Rua das Flores, 10", "Sorocaba", "18010000", "V")
-pedido_da_ana = novo_pedido(1, cliente_ana)
-adicionar_item(pedido_da_ana, Produto("Caderno", Dinheiro(1550)), 2)
-adicionar_item(pedido_da_ana, Produto("Caneta", Dinheiro(250)), 5)
+pedido_da_ana = pedidos.novo_pedido(1, cliente_ana)
+pedidos.adicionar_item(1, Produto("Caderno", Dinheiro(1550)), 2)
+pedidos.adicionar_item(1, Produto("Caneta", Dinheiro(250)), 5)
 
 recusar_pedido(2, "bruno@mail.com", "123", "18110000")
 
-pedido_da_ana_terceiro = novo_pedido(3, cliente_ana)
-adicionar_item(pedido_da_ana_terceiro, Produto("Livro", Dinheiro(8950)), 1)
+pedido_da_ana_terceiro = pedidos.novo_pedido(3, cliente_ana)
+pedidos.adicionar_item(3, Produto("Livro", Dinheiro(8950)), 1)
 
 recusar_pedido(4, "carla.mail.com", "98765432100", "18020000")
 
 cliente_diego = Cliente("Diego Rocha", "11122233344", "diego@mail.com", "Rua Nova, 7", "Itu", "13300000", "N")
-pedido_do_diego = novo_pedido(5, cliente_diego)
+pedido_do_diego = pedidos.novo_pedido(5, cliente_diego)
 
 cliente_eva = Cliente("Eva Nunes", "55566677788", "eva@mail.com", "Alameda Azul, 1", "Itu", "13300001", "F")
-pedido_da_eva = novo_pedido(6, cliente_eva)
+pedido_da_eva = pedidos.novo_pedido(6, cliente_eva)
 fone = Produto("Fone", Dinheiro(6000))
-adicionar_item(pedido_da_eva, fone, 1)
+pedidos.adicionar_item(6, fone, 1)
 
 recusar_pedido(7, "fabio@mail.com", "99988877766", "123")
 
 cliente_gil = Cliente("Gil Alves", "44455566677", "gil@mail.com", "Rua do Meio, 9", "Sorocaba", "18030000", "N")
-pedido_do_gil = novo_pedido(8, cliente_gil)
-adicionar_item(pedido_do_gil, fone, 2)
+pedido_do_gil = pedidos.novo_pedido(8, cliente_gil)
+pedidos.adicionar_item(8, fone, 2)
 
-print("pagar 1:", pagar(pedido_da_ana))
-print("pagar 3:", pagar(pedido_da_ana_terceiro))
-print("pagar 5:", pagar(pedido_do_diego))
-print("pagar 6:", pagar(pedido_da_eva))
-print("cancelar 5:", cancelar(pedido_do_diego))
-print("cancelar 1:", cancelar(pedido_da_ana))
+print("pagar 1:", pedidos.pagar(1))
+print("pagar 3:", pedidos.pagar(3))
+print("pagar 5:", pedidos.pagar(5))
+print("pagar 6:", pedidos.pagar(6))
+print("cancelar 5:", pedidos.cancelar(5))
+print("cancelar 1:", pedidos.cancelar(1))
 
-relatorio()
-print("arrecadado:", arrecadado())
-print("abertos:", quantidade_de_pedidos_abertos())
+pedidos.relatorio()
+print("arrecadado:", pedidos.arrecadado())
+print("abertos:", pedidos.quantidade_de_pedidos_abertos())
