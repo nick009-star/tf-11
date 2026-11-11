@@ -59,14 +59,24 @@ class Status:
         return self.codigo == "P"
 
 
-class Cliente:
-    def __init__(self, nome, cpf, email, rua, cidade, cep, tipo):
+class Pessoa:
+    def __init__(self, nome, cpf, email):
         self.nome = nome
         self.email = Email(email)
         self.cpf = Cpf(cpf)
+ 
+
+class Endereco:
+    def __init__(self, rua, cidade, cep):
         self.rua = rua
         self.cidade = cidade
         self.cep = Cep(cep)
+
+
+class Cliente:
+    def __init__(self, pessoa, endereco, tipo):
+        self.pessoa = pessoa
+        self.endereco = endereco
         self.tipo = tipo
 
 
@@ -192,7 +202,7 @@ class Pedidos:
 
     def relatorio(self):
         for numero, pedido in self.pedidos.items():
-            print("Pedido", numero, "-", pedido.cliente.nome, "-", pedido.cliente.cidade)
+            print("Pedido", numero, "-", pedido.cliente.pessoa.nome, "-", pedido.cliente.endereco.cidade)
             print("  status:", descrever_status(pedido.get_status()))
             pedido.itens.imprimir()
             if not pedido.itens.esta_vazia():
@@ -215,7 +225,7 @@ class Pedidos:
 
 # --- o roteiro da loja ---------------------------------------------------------
 pedidos = Pedidos()
-cliente_ana = Cliente("Ana Souza", "12345678901", "ana@mail.com", "Rua das Flores, 10", "Sorocaba", "18010000", "V")
+cliente_ana = Cliente(Pessoa("Ana Souza", "12345678901", "ana@mail.com"), Endereco("Rua das Flores, 10", "Sorocaba", "18010000"), "V")
 pedido_da_ana = pedidos.novo_pedido(1, cliente_ana)
 pedidos.adicionar_item(1, Produto("Caderno", Dinheiro(1550)), 2)
 pedidos.adicionar_item(1, Produto("Caneta", Dinheiro(250)), 5)
@@ -227,17 +237,17 @@ pedidos.adicionar_item(3, Produto("Livro", Dinheiro(8950)), 1)
 
 recusar_pedido(4, "carla.mail.com", "98765432100", "18020000")
 
-cliente_diego = Cliente("Diego Rocha", "11122233344", "diego@mail.com", "Rua Nova, 7", "Itu", "13300000", "N")
+cliente_diego = Cliente(Pessoa("Diego Rocha", "11122233344", "diego@mail.com"), Endereco("Rua Nova, 7", "Itu", "13300000"), "N")
 pedido_do_diego = pedidos.novo_pedido(5, cliente_diego)
 
-cliente_eva = Cliente("Eva Nunes", "55566677788", "eva@mail.com", "Alameda Azul, 1", "Itu", "13300001", "F")
+cliente_eva = Cliente(Pessoa("Eva Nunes", "55566677788", "eva@mail.com"), Endereco("Alameda Azul, 1", "Itu", "13300001"), "F")
 pedido_da_eva = pedidos.novo_pedido(6, cliente_eva)
 fone = Produto("Fone", Dinheiro(6000))
 pedidos.adicionar_item(6, fone, 1)
 
 recusar_pedido(7, "fabio@mail.com", "99988877766", "123")
 
-cliente_gil = Cliente("Gil Alves", "44455566677", "gil@mail.com", "Rua do Meio, 9", "Sorocaba", "18030000", "N")
+cliente_gil = Cliente(Pessoa("Gil Alves", "44455566677", "gil@mail.com"), Endereco("Rua do Meio, 9", "Sorocaba", "18030000"), "N")
 pedido_do_gil = pedidos.novo_pedido(8, cliente_gil)
 pedidos.adicionar_item(8, fone, 2)
 
