@@ -1,5 +1,4 @@
 class Cpf:
-    # Mantem um CPF que ja passou pela regra de tamanho.
     def __init__(self, valor):
         if len(valor) != 11:
             raise ValueError("cpf invalido")
@@ -7,7 +6,6 @@ class Cpf:
 
 
 class Email:
-    # Mantem um email que ja passou pelas regras basicas.
     def __init__(self, valor):
         if len(valor) == 0:
             raise ValueError("email vazio")
@@ -17,7 +15,6 @@ class Email:
 
 
 class Cep:
-    # Mantem um CEP com oito caracteres.
     def __init__(self, valor):
         if len(valor) != 8:
             raise ValueError("cep invalido")
@@ -25,7 +22,6 @@ class Cep:
 
 
 class Dinheiro:
-    # Representa dinheiro em centavos inteiros e concentra suas operacoes.
     def __init__(self, centavos):
         self._centavos = centavos
 
@@ -46,7 +42,6 @@ class Dinheiro:
 
 
 class Status:
-    # Conhece os estados possiveis e suas transicoes textuais.
     def __init__(self, codigo):
         self._codigo = codigo
 
@@ -67,7 +62,6 @@ class Status:
 
 
 class Pessoa:
-    # Agrupa os dados pessoais e valida os identificadores ao nascer.
     def __init__(self, nome, cpf, email):
         self._nome = nome
         self._email = Email(email)
@@ -78,7 +72,6 @@ class Pessoa:
 
 
 class Endereco:
-    # Guarda o endereco e valida o CEP recebido.
     def __init__(self, rua, cidade, cep):
         self._rua = rua
         self._cidade = cidade
@@ -89,7 +82,6 @@ class Endereco:
 
 
 class Cliente:
-    # Junta pessoa, endereco e a politica de desconto do cliente.
     def __init__(self, pessoa, endereco, tipo):
         self._pessoa = pessoa
         self._endereco = endereco
@@ -109,25 +101,21 @@ class Cliente:
 
 
 class TipoNormal:
-    # Define desconto zero para clientes sem categoria especial.
     def desconto_sobre(self, valor):
         return Dinheiro(0)
 
 
 class TipoVip:
-    # Define o desconto de dez por cento para clientes VIP.
     def desconto_sobre(self, valor):
         return valor.percentual(10)
 
 
 class TipoFuncionario:
-    # Define o desconto de vinte por cento para funcionarios.
     def desconto_sobre(self, valor):
         return valor.percentual(20)
 
 
 class Produto:
-    # Guarda uma unica definicao de produto e calcula valores por quantidade.
     def __init__(self, nome, preco):
         self._nome = nome
         self._preco = preco
@@ -142,7 +130,6 @@ class Produto:
 
 
 class ItemDoPedido:
-    # Liga um produto a quantidade comprada no pedido.
     def __init__(self, produto, quantidade):
         self._produto = produto
         self._quantidade = quantidade
@@ -159,7 +146,6 @@ class ItemDoPedido:
 
 
 class ItensDoPedido:
-    # Controla os itens de um pedido sem expor a lista interna.
     def __init__(self):
         self._itens = []
 
@@ -185,7 +171,6 @@ class ItensDoPedido:
 
 
 class Pedido:
-    # Aplica as regras de pagamento e produz o resumo de um pedido.
     def __init__(self, cliente):
         self._cliente = cliente
         self._itens = ItensDoPedido()
@@ -242,7 +227,6 @@ class Pedido:
 
 
 class Pedidos:
-    # Centraliza os pedidos por numero e agrega seus relatorios e totais.
     def __init__(self):
         self._pedidos = {}
 
@@ -313,7 +297,6 @@ def recusar_pedido(numero, email, cpf, cep):
         print("pedido", numero, "recusado:", erro)
 
 
-# --- o roteiro da loja preserva a sequencia original --------------------------
 pedidos = Pedidos()
 cliente_ana = Cliente(Pessoa("Ana Souza", "12345678901", "ana@mail.com"), Endereco("Rua das Flores, 10", "Sorocaba", "18010000"), TipoVip())
 pedidos.novo_pedido(1, cliente_ana)
