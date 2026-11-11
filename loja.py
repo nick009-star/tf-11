@@ -73,8 +73,8 @@ class Pessoa:
         self._email = Email(email)
         self._cpf = Cpf(cpf)
 
-    def descrever_nome(self):
-        return self._nome
+    def imprimir_nome(self):
+        print(self._nome, end="")
 
 
 class Endereco:
@@ -84,8 +84,8 @@ class Endereco:
         self._cidade = cidade
         self._cep = Cep(cep)
 
-    def descrever_cidade(self):
-        return self._cidade
+    def imprimir_cidade(self):
+        print(self._cidade)
 
 
 class Cliente:
@@ -96,12 +96,16 @@ class Cliente:
         self._tipo = tipo
 
     def imprimir_identificacao(self, numero):
-        nome = self._pessoa.descrever_nome()
-        cidade = self._endereco.descrever_cidade()
-        print("Pedido", numero, "-", nome, "-", cidade)
+        print("Pedido", numero, "-", end=" ")
+        pessoa = self._pessoa
+        pessoa.imprimir_nome()
+        print(" -", end=" ")
+        endereco = self._endereco
+        endereco.imprimir_cidade()
 
     def desconto_sobre(self, total):
-        return self._tipo.desconto_sobre(total)
+        tipo = self._tipo
+        return tipo.desconto_sobre(total)
 
 
 class TipoNormal:
@@ -129,7 +133,8 @@ class Produto:
         self._preco = preco
 
     def calcular_valor(self, quantidade):
-        return self._preco.multiplicar(quantidade)
+        preco = self._preco
+        return preco.multiplicar(quantidade)
 
     def imprimir_item(self, quantidade):
         valor = self.calcular_valor(quantidade)
@@ -143,10 +148,14 @@ class ItemDoPedido:
         self._quantidade = quantidade
 
     def calcular_total(self):
-        return self._produto.calcular_valor(self._quantidade)
+        produto = self._produto
+        quantidade = self._quantidade
+        return produto.calcular_valor(quantidade)
 
     def imprimir(self):
-        self._produto.imprimir_item(self._quantidade)
+        produto = self._produto
+        quantidade = self._quantidade
+        produto.imprimir_item(quantidade)
 
 
 class ItensDoPedido:
@@ -155,19 +164,23 @@ class ItensDoPedido:
         self._itens = []
 
     def adicionar(self, item):
-        self._itens.append(item)
+        itens = self._itens
+        itens.append(item)
 
     def esta_vazia(self):
         return len(self._itens) == 0
 
     def calcular_total(self):
         total = Dinheiro(0)
-        for item in self._itens:
-            total = total.somar(item.calcular_total())
+        itens = self._itens
+        for item in itens:
+            valor = item.calcular_total()
+            total = total.somar(valor)
         return total
 
     def imprimir(self):
-        for item in self._itens:
+        itens = self._itens
+        for item in itens:
             item.imprimir()
 
 
@@ -179,40 +192,51 @@ class Pedido:
         self._status = Status("A")
 
     def adicionar_item(self, item):
-        self._itens.adicionar(item)
+        itens = self._itens
+        itens.adicionar(item)
 
     def pagar(self):
-        if not self._status.esta_aberto():
+        status = self._status
+        if not status.esta_aberto():
             return False
-        if self._itens.esta_vazia():
+        itens = self._itens
+        if itens.esta_vazia():
             return False
-        self._status.marcar_pago()
+        status.marcar_pago()
         return True
 
     def cancelar(self):
-        if not self._status.esta_aberto():
+        status = self._status
+        if not status.esta_aberto():
             return False
-        self._status.marcar_cancelado()
+        status.marcar_cancelado()
         return True
 
     def esta_pago(self):
-        return self._status.esta_pago()
+        status = self._status
+        return status.esta_pago()
 
     def esta_aberto(self):
-        return self._status.esta_aberto()
+        status = self._status
+        return status.esta_aberto()
 
     def calcular_valor_a_pagar(self):
-        total = self._itens.calcular_total()
-        desconto = self._cliente.desconto_sobre(total)
+        itens = self._itens
+        cliente = self._cliente
+        total = itens.calcular_total()
+        desconto = cliente.desconto_sobre(total)
         return total.subtrair(desconto)
 
     def imprimir(self, numero):
-        self._cliente.imprimir_identificacao(numero)
-        print("  status:", self._status.descricao())
-        self._itens.imprimir()
-        if not self._itens.esta_vazia():
-            total = self._itens.calcular_total()
-            desconto = self._cliente.desconto_sobre(total)
+        cliente = self._cliente
+        status = self._status
+        itens = self._itens
+        cliente.imprimir_identificacao(numero)
+        print("  status:", status.descricao())
+        itens.imprimir()
+        if not itens.esta_vazia():
+            total = itens.calcular_total()
+            desconto = cliente.desconto_sobre(total)
             valor_a_pagar = total.subtrair(desconto)
             print("  total:", total, "| desconto:", desconto, "| a pagar:", valor_a_pagar)
 
@@ -229,16 +253,23 @@ class Pedidos:
 
     def adicionar_item(self, numero, produto, quantidade):
         item = ItemDoPedido(produto, quantidade)
-        self._pedidos[numero].adicionar_item(item)
+        pedidos = self._pedidos
+        pedido = pedidos[numero]
+        pedido.adicionar_item(item)
 
     def pagar(self, numero):
-        return self._pedidos[numero].pagar()
+        pedidos = self._pedidos
+        pedido = pedidos[numero]
+        return pedido.pagar()
 
     def cancelar(self, numero):
-        return self._pedidos[numero].cancelar()
+        pedidos = self._pedidos
+        pedido = pedidos[numero]
+        return pedido.cancelar()
 
     def relatorio(self):
-        for numero, pedido in self._pedidos.items():
+        pedidos = self._pedidos
+        for numero, pedido in pedidos.items():
             pedido.imprimir(numero)
 
     def arrecadado(self):
@@ -246,7 +277,8 @@ class Pedidos:
 
     def _somar_pedidos_pagos(self):
         total_arrecadado = Dinheiro(0)
-        for pedido in self._pedidos.values():
+        pedidos = self._pedidos
+        for pedido in pedidos.values():
             total_arrecadado = self._somar_se_pago(total_arrecadado, pedido)
         return total_arrecadado
 
@@ -255,7 +287,8 @@ class Pedidos:
 
     def _contar_pedidos_abertos(self):
         quantidade = 0
-        for pedido in self._pedidos.values():
+        pedidos = self._pedidos
+        for pedido in pedidos.values():
             quantidade = quantidade + self._quantidade_se_aberto(pedido)
         return quantidade
 
@@ -280,7 +313,7 @@ def recusar_pedido(numero, email, cpf, cep):
         print("pedido", numero, "recusado:", erro)
 
 
-# --- o roteiro da loja ---------------------------------------------------------
+# --- o roteiro da loja preserva a sequencia original --------------------------
 pedidos = Pedidos()
 cliente_ana = Cliente(Pessoa("Ana Souza", "12345678901", "ana@mail.com"), Endereco("Rua das Flores, 10", "Sorocaba", "18010000"), TipoVip())
 pedidos.novo_pedido(1, cliente_ana)
