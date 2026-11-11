@@ -101,11 +101,25 @@ class Cliente:
         print("Pedido", numero, "-", nome, "-", cidade)
 
     def desconto_sobre(self, total):
-        if self._tipo == "V":
-            return total.percentual(10)
-        elif self._tipo == "F":
-            return total.percentual(20)
+        return self._tipo.desconto_sobre(total)
+
+
+class TipoNormal:
+    # Define desconto zero para clientes sem categoria especial.
+    def desconto_sobre(self, valor):
         return Dinheiro(0)
+
+
+class TipoVip:
+    # Define o desconto de dez por cento para clientes VIP.
+    def desconto_sobre(self, valor):
+        return valor.percentual(10)
+
+
+class TipoFuncionario:
+    # Define o desconto de vinte por cento para funcionarios.
+    def desconto_sobre(self, valor):
+        return valor.percentual(20)
 
 
 class Produto:
@@ -228,19 +242,33 @@ class Pedidos:
             pedido.imprimir(numero)
 
     def arrecadado(self):
+        return self._somar_pedidos_pagos()
+
+    def _somar_pedidos_pagos(self):
         total_arrecadado = Dinheiro(0)
         for pedido in self._pedidos.values():
-            if pedido.esta_pago():
-                valor_a_pagar = pedido.calcular_valor_a_pagar()
-                total_arrecadado = total_arrecadado.somar(valor_a_pagar)
+            total_arrecadado = self._somar_se_pago(total_arrecadado, pedido)
         return total_arrecadado
 
     def quantidade_de_pedidos_abertos(self):
+        return self._contar_pedidos_abertos()
+
+    def _contar_pedidos_abertos(self):
         quantidade = 0
         for pedido in self._pedidos.values():
-            if pedido.esta_aberto():
-                quantidade = quantidade + 1
+            quantidade = quantidade + self._quantidade_se_aberto(pedido)
         return quantidade
+
+    def _somar_se_pago(self, total, pedido):
+        if not pedido.esta_pago():
+            return total
+        valor_a_pagar = pedido.calcular_valor_a_pagar()
+        return total.somar(valor_a_pagar)
+
+    def _quantidade_se_aberto(self, pedido):
+        if not pedido.esta_aberto():
+            return 0
+        return 1
 
 
 def recusar_pedido(numero, email, cpf, cep):
@@ -254,7 +282,7 @@ def recusar_pedido(numero, email, cpf, cep):
 
 # --- o roteiro da loja ---------------------------------------------------------
 pedidos = Pedidos()
-cliente_ana = Cliente(Pessoa("Ana Souza", "12345678901", "ana@mail.com"), Endereco("Rua das Flores, 10", "Sorocaba", "18010000"), "V")
+cliente_ana = Cliente(Pessoa("Ana Souza", "12345678901", "ana@mail.com"), Endereco("Rua das Flores, 10", "Sorocaba", "18010000"), TipoVip())
 pedidos.novo_pedido(1, cliente_ana)
 pedidos.adicionar_item(1, Produto("Caderno", Dinheiro(1550)), 2)
 pedidos.adicionar_item(1, Produto("Caneta", Dinheiro(250)), 5)
@@ -266,17 +294,17 @@ pedidos.adicionar_item(3, Produto("Livro", Dinheiro(8950)), 1)
 
 recusar_pedido(4, "carla.mail.com", "98765432100", "18020000")
 
-cliente_diego = Cliente(Pessoa("Diego Rocha", "11122233344", "diego@mail.com"), Endereco("Rua Nova, 7", "Itu", "13300000"), "N")
+cliente_diego = Cliente(Pessoa("Diego Rocha", "11122233344", "diego@mail.com"), Endereco("Rua Nova, 7", "Itu", "13300000"), TipoNormal())
 pedidos.novo_pedido(5, cliente_diego)
 
-cliente_eva = Cliente(Pessoa("Eva Nunes", "55566677788", "eva@mail.com"), Endereco("Alameda Azul, 1", "Itu", "13300001"), "F")
+cliente_eva = Cliente(Pessoa("Eva Nunes", "55566677788", "eva@mail.com"), Endereco("Alameda Azul, 1", "Itu", "13300001"), TipoFuncionario())
 pedidos.novo_pedido(6, cliente_eva)
 fone = Produto("Fone", Dinheiro(6000))
 pedidos.adicionar_item(6, fone, 1)
 
 recusar_pedido(7, "fabio@mail.com", "99988877766", "123")
 
-cliente_gil = Cliente(Pessoa("Gil Alves", "44455566677", "gil@mail.com"), Endereco("Rua do Meio, 9", "Sorocaba", "18030000"), "N")
+cliente_gil = Cliente(Pessoa("Gil Alves", "44455566677", "gil@mail.com"), Endereco("Rua do Meio, 9", "Sorocaba", "18030000"), TipoNormal())
 pedidos.novo_pedido(8, cliente_gil)
 pedidos.adicionar_item(8, fone, 2)
 
